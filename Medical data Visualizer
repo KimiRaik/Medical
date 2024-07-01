@@ -1,0 +1,30 @@
+%pip install seaborn
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+df = pd.read_csv('medical_examination.csv')
+df.head()
+
+height2Meters = (df['height']/100)*(df['height']/100)
+IMC = df['weight'] / height2Meters 
+df.loc[IMC <= 25, 'overweight'] = 0 
+df.loc[IMC > 25, 'overweight'] = 1 
+df.head()
+
+df.loc[df['cholesterol']==1, 'cholesterol'] = 0 
+df.loc[df['cholesterol']>1, 'cholesterol'] = 1 
+df.loc[df['gluc']==1, 'gluc'] = 0 
+df.loc[df['gluc']>1, 'gluc'] = 1
+df_cat = pd.melt(df, id_vars=['cardio'], value_vars=['active','alco','cholesterol','gluc','smoke'])
+sns.catplot(x='variable',col='cardio',hue='value',kind='count',data=df_cat)
+
+df_filtered = df[(df['ap_lo'] <= df['ap_hi']) & (df['height'] >= df['height'].quantile(0.025)) & (df['height'] < df['height'].quantile(0.975)) & (df['weight'] >= df['weight'].quantile(0.025)) & (df['weight'] < df['weight'].quantile(0.975))]
+Corr = df_filtered.corr()
+mask = np.zeros_like(Corr)
+mask[np.triu_indices_from(mask)] = True
+with sns.axes_style("white"):
+    f, fig = plt.subplots(figsize=(5, 5))
+    fig = sns.heatmap(Corr,vmin=0,vmax=.25,square=True,annot=True,linewidths=.5,fmt=".1f",mask=mask)
+
